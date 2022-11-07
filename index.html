@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie app</title>
+    <style>
+        #parent{
+            width: 90%;
+            height: auto;
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 20px;
+            margin: auto;
+            margin-top: 50px;
+        }
+        #parent>div{
+            height: 420px;
+            text-align: center;
+            line-height: 14px;
+            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        }
+        #parent>div>img{
+            width: 100%;
+            height: 75%;
+        }
+        h2{
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16px;
+        }
+        p{
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16px;
+        }
+        #parent>img{
+          width: 100%;
+          height: 100%;
+        }
+        span{
+            font-size: 25px;
+            font-family: Arial, Helvetica, sans-serif;
+            padding-left: 550px;
+            color: rgb(13, 121, 27);
+        }
+        body{
+            background-color: aliceblue;
+        }
+        #parent1>img{
+            display: block;
+            margin: auto;
+            width: 90%;
+        }
+        #parent1{
+            width:100%;
+            margin: auto;
+        }
+        #parent1>img{
+            width: 100%;
+            height: 570px;
+        }
+        #navbar{
+            background-color: rgb(160, 16, 16);
+            padding: 15px 15px;
+        }
+        input,button,select{
+            font-size: 18px;
+            padding: 8px 10px;
+            border: 0px;
+            border-radius: 5px;
+            margin: 0px 10px;
+            background-color: rgb(245, 240, 242);
+        }
+        #one{
+            margin-left:-10px;
+            background-color:skyblue;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="navbar">
+        <select id="sorting">
+    
+            <option value="">Sorting by year</option>
+            <option value="High">High to Low</option>
+            <option value="Low">Low to high</option>
+        </select>
+        <input type="text" placeholder="search movie by name" id="search">
+        <button id="one"onclick="search()">Search</button>
+        <button onclick="year_filter()">All latest movie after 2014</button>
+    </div>
+     <div id="parent1">
+        <img src="https://i.ytimg.com/vi/-pJqRxIRQEo/maxresdefault.jpg">
+     </div>
+    <div id="parent">
+       
+    </div>
+</body>
+</html>
+<script>
+    let data;
+     let movie_name;
+     async function search(){
+        movie_name=document.querySelector("#search").value;
+       let spread_data =  await fetch(`https://www.omdbapi.com/?s=${movie_name}&apikey=bbf1c81e`);
+
+       try{
+        
+           data= await spread_data.json();
+           data=data.Search
+          display_data(data)
+        }
+       catch{
+            document.querySelector("#parent1").innerHTML=" ";
+            let img2=document.createElement("img");
+            img2.src="https://miro.medium.com/max/1400/1*dH58ZpeVOaNehc-JO-RIPw.png"
+            document.querySelector("#parent1").append(img2)
+        }
+   }
+
+     
+     function display_data(data){
+        document.querySelector("#parent").innerHTML=" "
+        document.querySelector("#parent1").innerHTML=" ";
+        data.forEach(function(ele,ind) {
+          
+            let box=document.createElement("div");
+            let img1=document.createElement("img");
+            img1.src=ele.Poster;
+            let title=document.createElement("h2");
+            title.innerText=ele.Title;
+            let rel=document.createElement("p");
+            rel.innerText="Released Year :"+ele.Year;
+            let rat=document.createElement("p")
+            rat.innerText="";
+            box.append(img1,title,rel,rat);
+            document.querySelector("#parent").append(box)
+
+            ratting(ele.imdbID,rat)
+      });
+     }
+
+     async function ratting(rat,ind){
+                let rat_data=await fetch(`https://www.omdbapi.com/?i=${rat}&apikey=bbf1c81e`)
+                   
+                    rat_data=await rat_data.json()
+                    ind.innerText= `Imdb Rating :${rat_data.imdbRating}`
+            }
+     document.querySelector("#sorting").addEventListener("change",sortBy_year)
+
+     function sortBy_year(){
+        let input_year=document.querySelector("#sorting").value;
+        let copy_data=[...data];
+        if(input_year=="High"){
+            copy_data.sort(function(a,b){
+              return  a.Year-b.Year;
+            })
+            display_data(copy_data)
+        }
+        if(input_year=="Low"){
+            copy_data.sort(function(a,b){
+              return  b.Year-a.Year;
+            })
+            display_data(copy_data)
+        }
+        if(input_year==""){
+           display_data(data)
+        }
+     }
+
+    async function year_filter(){
+
+      
+        let copy_data1=await fetch(`https://www.omdbapi.com/?s=movies&apikey=bbf1c81e&page=2`);
+         
+        copy_data1= await copy_data1.json()
+        copy_data1=copy_data1.Search;
+        console.log(copy_data1)
+        try{
+        copy_data1=copy_data1.filter(function(ele){
+           return ele.Year>=2014;
+        })
+        if(copy_data1==""){
+            document.querySelector("#parent1").innerHTML=" ";
+            let img2=document.createElement("img");
+            img2.src="https://miro.medium.com/max/1400/1*dH58ZpeVOaNehc-JO-RIPw.png"
+            document.querySelector("#parent1").append(img2)
+        }
+        else{
+        display_data(copy_data1)
+        }
+    }
+    catch{
+        document.querySelector("#parent1").innerHTML=" ";
+            let img2=document.createElement("img");
+            img2.src="https://miro.medium.com/max/1400/1*dH58ZpeVOaNehc-JO-RIPw.png"
+            document.querySelector("#parent1").append(img2)
+    }
+     }
+    
+    //}
+</script>
